@@ -1,4 +1,9 @@
 //program to establish common card deck functions
+//too many globals; need to rewrite using pointers
+
+
+//sortcards using cardsinhand only; not ccardsinhand
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,9 +12,12 @@
 
 int deck[52];
 int cardsInHand = 7;
+int cCardsInHand = 7;
+int dcounter = 0;
 
-int hand[7];
-int compHand[7];
+
+int hand[52];
+int compHand[52];
 
 char suit[4] = {'C', 'D', 'S', 'H'};
 char face[13] = {'2', '3', '4', '5', '6', '7', '8', '9', 'X', 'J', 'Q', 'K', 'A'};
@@ -19,7 +27,10 @@ void shuffleDeck();
 void printDeck();
 void printCard(int);
 void dealHand();
-void printHand(int []);
+void printHand(int []); //for printing player's hand; problems if comp and player dont have same no of cards
+void drawCard(int []);
+void cDrawCard(int []);
+void sortCards(int [], int);
 
 int main() {
 
@@ -32,22 +43,58 @@ int main() {
     printDeck();
     dealHand();
 
+    printf("\n-----------------------\n");
+
     printf("\nYour hand:");
     printHand(hand);
     printf("\n\t   ");
     for (int n = 0; n < cardsInHand; n++)
         printf(" %d", hand[n]);
 
+    sortCards(hand, cardsInHand);
+    printf("\nYour hand:");
+    printHand(hand);
+    printf("\n\t   ");
+    for (int n = 0; n < cardsInHand; n++)
+        printf(" %d", hand[n]);
+
+
     printf("\nComputer's hand: ");
     printHand(compHand);
     printf("\n\t\t");
-
-    for (int k = 0; k < cardsInHand; k++)
+    for (int k = 0; k < cCardsInHand; k++)
         printf(" %d ", compHand[k]);
-
+    sortCards(compHand, cCardsInHand);
+    printf("\nComputer's hand: ");
+    printHand(compHand);
+    printf("\n\t\t");
+    for (int k = 0; k < cCardsInHand; k++)
+        printf(" %d ", compHand[k]);
+    printf("\n-----------------------\n");
     cardNum = 51;
     printf("\nCard number %d is: ", cardNum);
     printCard(cardNum);
+    printf("\n-----------------------\n");
+
+    printf("\nDrawing a card\n");
+    drawCard(hand);
+    cDrawCard(compHand);
+
+    printf("\nYour hand:");
+    sortCards(hand, cardsInHand);
+    printHand(hand);
+    printf("\n\t   ");
+    for (int n = 0; n < cardsInHand; n++)
+        printf(" %d", hand[n]);
+    printf("\nComputer's hand: ");
+    sortCards(compHand, cCardsInHand);
+    printHand(compHand);
+    printf("\n\t\t");
+    for (int p = 0; p < cCardsInHand; p++)
+        printf(" %d", compHand[p]);
+
+    printf("\n-----------------------\n");
+
     return 0;
 }
 
@@ -86,7 +133,6 @@ void printCard(int cardNum){
 }
 
 void dealHand() {
-    int dcounter = 0;
 
     for (int j = 0; j < cardsInHand; j++) {
         hand[j] = deck[dcounter];
@@ -97,6 +143,34 @@ void dealHand() {
 }
 
 void printHand(int hand[]) {
+    //sortCards(hand, cardsInHand);
     for (int i = 0; i < cardsInHand; i++)
         printf(" %c-%c ", face[hand[i] / 4], suit[hand[i] % 4]);
+}
+
+void drawCard(int hand[]) {
+    hand[cardsInHand] = deck[dcounter];
+    cardsInHand++;
+    dcounter++;
+ }
+
+void cDrawCard(int compHand[]) {
+    compHand[cCardsInHand] = deck[dcounter];
+    cCardsInHand++;
+    dcounter++;
+
+}
+
+void sortCards(int hand[], int cardsInHand) {
+    int temp;
+    for (int i = 0; i < cardsInHand - 1; i++) {
+        for (int j = 0; j < cardsInHand - i - 1; j++) {
+            if (hand[j] > hand[j+1]) {
+                temp = hand[j];
+                hand[j] = hand[j+1];
+                hand[j+1] = temp;
+            }
+        }
+    }
+
 }
