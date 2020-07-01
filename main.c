@@ -1,96 +1,77 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 int deck[52];
+char hand[7][2];
 
+
+char suit[4] = {'C', 'D', 'S', 'H'};
+char face[13] = {'2', '3', '4', '5', '6', '7', '8', '9', 'X', 'J', 'Q', 'K', 'A'};
+
+void initDeck();
+void shuffleDeck();
 void printDeck();
 void printCard(int);
-void shuffleDeck(); //giving me two 0s for some reason
+void dealHand();
 
 int main() {
 
-    int cardNum = 0;
-    int value = 2;
-    char suit, face;
+    int cardNum;
+    char quit, junk;
 
-    //initialize deck starting at 0 for 2-clubs, 1 for 2-diamonds, 2 for 2-spades,...51 for Ace-Hearts
-    for (int i = 0; i < 52; i++)
-        deck[i] = i;
+    initDeck();
 
-    printf("Your deck has 52 cards.\n");
-    printDeck();
+    while (quit != 'q') {
+        printf("Your deck.");
+        printDeck();
 
-    printf("\nShuffling...\n");
-    shuffleDeck();
-    printf("\n");
-    printDeck();
+        shuffleDeck();
+        printDeck();
 
-    printf("\nfirst card listed is: \n");
-    printCard(deck[0]);
-
+        printf("Hit q to quit; any other key to continue.\n");
+        quit = getchar();
+        junk = getchar();
+    }
     return 0;
 }
 
-void printDeck() {
+void initDeck(){
+//initialize deck starting at 0 for 2-clubs, 1 for 2-diamonds, 2 for 2-spades,...51 for Ace-Hearts
     for (int i = 0; i < 52; i++)
-        printf(" %d ", deck[i]);
+        deck[i] = i;
 }
 
-void printCard(int cardNum) {
+void shuffleDeck(){
 
-    int value = 2;
-    char suit, face;
-    //determine card value
-    if (cardNum > 3) //else value = 2;
-        value = (cardNum / 4) + 2;
-
-    //determine suit
-    if (cardNum % 4 == 0)
-        suit = 'C';
-    else if (cardNum % 4 == 1)
-        suit = 'D';
-    else if (cardNum % 4 == 2)
-        suit = 'S';
-    else if (cardNum % 4 == 3)
-        suit = 'H';
-    else printf("this isn't a card, wtf\n");
-
-    //adjusting for face cards
-    if (value <= 10) {
-        printf("\nCard number %d is: %d-%c", cardNum, value, suit);
-    }
-
-    else if (value == 11){ //jack
-        face = 'J';
-        printf("\nCard number %d is: %c-%c", cardNum, face, suit);
-    }
-
-    else if (value == 12) {//queen
-        face = 'Q';
-        printf("\nCard number %d is: %c-%c", cardNum, face, suit);
-    }
-
-    else if (value == 13) {// king
-        face = 'K';
-        printf("\nCard number %d is: %c-%c", cardNum, face, suit);
-    }
-
-    else if (value == 14) {//ace
-        face = 'A';
-        printf("\nCard number %d is: %c-%c\n", cardNum, face, suit);
-    }
-}
-
-void shuffleDeck() {
     srand(time(NULL));
     int y, temp;
 
-    for (int x = 52; x > 0; x--) {
-            y = rand() % x;
+    printf("\n...shuffling...\n");
+
+    for (int x = 51; x > 0; x--) {
+            y = rand() % x; //gets rando num bet 0 & 52
             temp = deck[x];
             deck[x] = deck[y];
             deck[y] = temp;
     }
+}
+
+void printDeck(){
+    printf("\n");
+    for (int i = 0; i < 52; i++)
+        printf(" %d ", deck[i]);
+    printf("\n");
+
+}
+
+void printCard(int cardNum){
+
+}
+
+void dealHand() {
+
+    for (int j = 0; j < 7; j++)
 
 }
