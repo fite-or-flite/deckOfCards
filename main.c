@@ -23,9 +23,11 @@ void poker();
 int rankPokerHand(int[]);
 int checkNumPairs(int[]);
 void compareEqualRanks();
-int checkHighSuit(int, int);
 void pWin();
 void cWin();
+void pcTie();
+int *findPairValue(int[]);
+
 
 char suit[4] = {'C', 'D', 'S', 'H'};
 char face[13] = {'2', '3', '4', '5', '6', '7', '8', '9', 'X', 'J', 'Q', 'K', 'A'};
@@ -36,6 +38,10 @@ int cHand[52] = {0};
 int pNumCards = 0;
 int cNumCards = 0;
 int *deckPosition = deck;
+struct card {
+        char s;
+        int f;
+    };
 
 int main()
 {
@@ -43,8 +49,8 @@ int main()
     for (int i = 0; i < 52; i++)
         deck[i] = i;
 
-//    mainMenu();
-    poker();
+   // mainMenu();
+        poker();
     return 0;
 }
 
@@ -225,12 +231,14 @@ void poker(){
         }
     }
     //redeal cards to spots indicated
-    for (int i = 0; i < (sizeof(choicePos)/sizeof(choicePos[0])); i++) {
-        changeMe = choicePos[i];
-        pHand[changeMe] = *deckPosition;
-        deckPosition++;
+    if (choiceCtr > 0){
+        for (int i = 0; i < (sizeof(choicePos)/sizeof(choicePos[0])); i++) {
+            changeMe = choicePos[i];
+            pHand[changeMe] = *deckPosition;
+            deckPosition++;
+        }
+        printHand(pHand, pNumCards);
     }
-    printHand(pHand, pNumCards);
 
     //compare phand to chand; higher rankPokerHand() wins
     if (rankPokerHand(pHand) > rankPokerHand(cHand))
@@ -255,10 +263,6 @@ int rankPokerHand(int hand[]) {
     bool pair = false;
     int pairCtr = 0;
     //convert hand into card struct
-    struct card {
-        char s;
-        int f;
-    };
     struct card Cards[5];
     for (int i = 0; i < 5; i++) {
         Cards[i].s = suit[hand[i] %4];
@@ -428,12 +432,11 @@ int checkNumPairs(int hand[]) {
 void compareEqualRanks() {
     int pRank = rankPokerHand(pHand);
     int cRank = rankPokerHand(cHand);
-    int pPairA, pPairB, cPairA, cPairB;
+    int *pairList;
+    int pPairA = 0, pPairB = 0, cPairA = 0, cPairB = 0;
+    int pHighCard = 0, cHighCard = 0;
+
     //convert hands to structs
-    struct card {
-        char s;
-        int f;
-    };
     struct card pCards[5];
     struct card cCards[5];
     for (int i = 0; i < 5; i++) {
@@ -443,14 +446,13 @@ void compareEqualRanks() {
         cCards[i].f = cHand[i] / 4 + 2;
     }
 
-    if (pRank != cRank) printf("\nIs there a problem here?");
+    if (pRank != cRank) printf("\nIs there a problem here? pRank shouldn't equal cRank");
     else {
         switch(pRank) {
             case 10:
                 //royal flush
                 //suits rank equal
-                printf("\nYou tie!");
-                printf("\n-\\/('_')\\/-");
+                pcTie();
                 break;
             case 9:
             case 6:
@@ -461,6 +463,7 @@ void compareEqualRanks() {
                     pWin();
                 else if (pHand[4] < cHand[4])
                     cWin();
+                else pcTie();
                 break;
             case 8:
             case 7:
@@ -469,44 +472,116 @@ void compareEqualRanks() {
                 //check high card in 3oak, cannot be equal
                 //find 3ofak value (xCards[i].f = xPairA)
                 //compare
+                pairList = findPairValue(pHand);
+                for (int i = 0; i < 3; i++) {
+                    if (pairList[i] > pPairA)
+                        pPairA = pairList[i];
+                    else pPairB = pairList[i];
+                }
+                pairList = findPairValue(cHand);
+                for (int i = 0; i < 3; i++) {
+                    if (pairList[i] > cPairA)
+                        cPairA = pairList[i];
+                    else cPairB = pairList[i];
+                }
+                if (pPairA > cPairA)
+                    pWin();
+                else if (pPairA < cPairA)
+                    cWin();
+                else pcTie(); //shouldn't be possible
                 break;
             case 3:
                 //two pair
                 //check high card pair, then low card pair, then kicker
                 //find pair values (xPairA, xPairB), compare
                 //if equal, find highest card, not incl pair
+                pairList = findPairValue(pHand);
+                for (int i = 0; i < 2; i++) {
+                    if (pairList[i] > pPairA)
+                        pPairA = pairList[i];
+                    else pPairB = pairList[i];
+                }
+                pairList = findPairValue(cHand);
+                for (int i = 0; i < 2; i++) {
+                    if (pairList[i] > cPairA)
+                        cPairA = pairList[i];
+                    else cPairB = pairList[i];
+                }
+                if (pPairA > cPairA)
+                    pWin();
+                else if (pPairA < cPairA)
+                    cWin();
+                else { //A pairs are equal
+                    if (pPairB > cPairB)
+                        pWin();
+                    else if (pPairB < cPairB)
+                        cWin();
+                    else { //both pairs are equal
+                        for (int i = 0; i < 5; i++) {
+                            if ((pPairA != pHand[i]) && (pPairB != pHand[i]))
+                                pHighCard = pHand[i];
+                            if ((cPairA != cHand[i]) && (cPairB != pHand[i]))
+                                cHighCard = cHand[i];
+                        }
+                        if (pHighCard > cHighCard)
+                            pWin();
+                        else if (pHighCard < cHighCard)
+                            cWin();
+                        else pcTie();
+                    }
+                }
                 break;
             case 2:
                 //pair
                 //check high card pair, then high kicker, mid kicker, low kicker
                 //find pair values (xPairA), compare
                 //if equal, find highest card, not incl pair, etc
+                pairList = findPairValue(pHand);
+                pPairA = pairList[0];
+                pairList = findPairValue(cHand);
+                cPairA = pairList[0];
+                if (pPairA > cPairA)
+                    pWin();
+                else if (pPairA < cPairA)
+                    cWin();
+                else { //A pairs are equal
+                    for (int i = 4; i >= 0; i--) {
+                        if ((pPairA != pCards[i].f) && (cPairA != cCards[i].f)) {
+                            if (pCards[i].f > cCards[i].f) {
+                                pWin();
+                                printf("\nYou have the high card!");
+                                break;
+                            }
+                            else if (pCards[i].f < cCards[i].f) {
+                                cWin();
+                                printf("\nComputer has the high card!");
+                                break;
+                            }
+                        }
+                    }
+                }
                 break;
-            case 1:
+            case 1: //make this into function
                 //high card
                 //highest card wins, the high kicker, etc
                 for (int i = 4; i >= 0; i--) {
-                    if (pHand[i] > cHand[i]) {
+                    if (pCards[i].f > cCards[i].f) {
                         pWin();
                         printf("\nYou have the high card!");
                         break;
                     }
-                    else if (pHand[i] < cHand[i]) {
+                    else if (pCards[i].f < cCards[i].f) {
                         cWin();
                         printf("\nComputer has the high card!");
                         break;
                     }
+                    //what if they're allthe same??
                 }
                 break;
             default:
                 break;
         }
     }
-}
-
-int checkHighSuit (int pCard, int cCard) {
-    int returnValue = 0;
-
 }
 
 void pWin() {
@@ -516,3 +591,36 @@ void pWin() {
 void cWin() {
     printf("\nYou lose!");
 }
+
+void pcTie() {
+    printf("\nYou tie!");
+    printf("\n-\\/('_')\\/-");
+}
+
+int *findPairValue(int hand[]) {
+    static int arrayOfPairs[3];
+    int arrayCtr = 0;
+    //set up struct, bc i can't pass the stupid thing
+    struct card Cards[5];
+    for (int i = 0; i < 5; i++) {
+        Cards[i].s = suit[hand[i] %4];
+        Cards[i].f = hand[i] / 4 + 2;
+    }
+    //look for pairs, add to array
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            if (Cards[i].f == Cards[j].f) {
+                for (int k = 0; k < 3; k++) {
+                    if (arrayOfPairs[k] == Cards[i].f) //already in array; don't add
+                        break;
+                    else { //not in array; add to array
+                        arrayOfPairs[arrayCtr] = Cards[i].f;
+                        arrayCtr++;
+                    }
+                }
+            }
+        }
+    }
+    return arrayOfPairs;
+}
+
