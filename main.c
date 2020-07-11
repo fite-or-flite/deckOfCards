@@ -1,9 +1,9 @@
 //chris fite
 //070220
-//edited 070420
+//edited 071120
 
 //yet another rewritten deck of cards program
-//converting to poker games
+//finishing poker hand ranking mechanisms (specifically, comparing hands with equal rank)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +22,10 @@ int totalOfCards(int[], int);
 void poker();
 int rankPokerHand(int[]);
 int checkNumPairs(int[]);
+void compareEqualRanks();
+int checkHighSuit(int, int);
+void pWin();
+void cWin();
 
 char suit[4] = {'C', 'D', 'S', 'H'};
 char face[13] = {'2', '3', '4', '5', '6', '7', '8', '9', 'X', 'J', 'Q', 'K', 'A'};
@@ -50,7 +54,6 @@ void mainMenu() {
     printf("\n\nWhich game would you like to play?");
     printf("\n(a) 5 card draw");
     printf("\n(b) Blackjack");
-    printf("\n(c) ");
     printf("\n(q) Quit\n");
     scanf("%c%c", &choice, &garbage);
     switch(choice) {
@@ -59,8 +62,6 @@ void mainMenu() {
             break;
         case 'b':
             blackJack();
-            break;
-        case 'c':
             break;
         case 'q':
             printf("\nbye bye");
@@ -162,10 +163,9 @@ void blackJack() {
     else if ((totalOfCards(pHand, pNumCards) == 21)
         || (totalOfCards(pHand, pNumCards) >= totalOfCards(cHand, cNumCards))
         || (totalOfCards(cHand, cNumCards) > 21)) {
-        printf("\nYou won!");
-    }
-    else if (totalOfCards(pHand, pNumCards) < totalOfCards(cHand, cNumCards))
-            printf("\nYou lost!");
+            pWin();
+        }
+    else if (totalOfCards(pHand, pNumCards) < totalOfCards(cHand, cNumCards)) cWin();
     printf("\nTotals:\nplayer: %d computer: %d", totalOfCards(pHand, pNumCards), totalOfCards(cHand, cNumCards));
 }
 
@@ -234,26 +234,10 @@ void poker(){
 
     //compare phand to chand; higher rankPokerHand() wins
     if (rankPokerHand(pHand) > rankPokerHand(cHand))
-        printf("\nYou win!");
-    else if (rankPokerHand(pHand) == rankPokerHand(cHand)) {
-        //if both have same rank, compare high cards
-        if (rankPokerHand(pHand) == 1){
-            if (pHand[4] > cHand[4]) {
-                printf("\nYou win!");
-                printf("\nYou have the high card!");
-            }
-            else if (pHand[4] < cHand[4]) {
-                printf("\nYou lose!");
-                printf("\nComputer has the high card!");
-            }
-        }
-        else {
-            printf("\nYou tie!");
-            printf("\n(sorry i haven't written the function to compare equivalent hands yet");
-        }
-
-    }
-    else printf("\nYou lose!");
+        pWin();
+    else if (rankPokerHand(pHand) == rankPokerHand(cHand))
+        compareEqualRanks();
+    else cWin();
     //show both hands
     printf("\nYour hand: %s", handNames[rankPokerHand(pHand)]);
     printHand(pHand, pNumCards);
@@ -439,4 +423,96 @@ int checkNumPairs(int hand[]) {
         }
     returnValue = pairCtr / 2;
     return returnValue;
+}
+
+void compareEqualRanks() {
+    int pRank = rankPokerHand(pHand);
+    int cRank = rankPokerHand(cHand);
+    int pPairA, pPairB, cPairA, cPairB;
+    //convert hands to structs
+    struct card {
+        char s;
+        int f;
+    };
+    struct card pCards[5];
+    struct card cCards[5];
+    for (int i = 0; i < 5; i++) {
+        pCards[i].s = suit[pHand[i] %4];
+        pCards[i].f = pHand[i] / 4 + 2;
+        cCards[i].s = suit[cHand[i] %4];
+        cCards[i].f = cHand[i] / 4 + 2;
+    }
+
+    if (pRank != cRank) printf("\nIs there a problem here?");
+    else {
+        switch(pRank) {
+            case 10:
+                //royal flush
+                //suits rank equal
+                printf("\nYou tie!");
+                printf("\n-\\/('_')\\/-");
+                break;
+            case 9:
+            case 6:
+            case 5:
+                //straight flush, flush, straight
+                //check highest card, suits rank equal
+                if (pHand[4] > cHand[4])
+                    pWin();
+                else if (pHand[4] < cHand[4])
+                    cWin();
+                break;
+            case 8:
+            case 7:
+            case 4:
+                //four of a kind, full house, 3 of a kind
+                //check high card in 3oak, cannot be equal
+                //find 3ofak value (xCards[i].f = xPairA)
+                //compare
+                break;
+            case 3:
+                //two pair
+                //check high card pair, then low card pair, then kicker
+                //find pair values (xPairA, xPairB), compare
+                //if equal, find highest card, not incl pair
+                break;
+            case 2:
+                //pair
+                //check high card pair, then high kicker, mid kicker, low kicker
+                //find pair values (xPairA), compare
+                //if equal, find highest card, not incl pair, etc
+                break;
+            case 1:
+                //high card
+                //highest card wins, the high kicker, etc
+                for (int i = 4; i >= 0; i--) {
+                    if (pHand[i] > cHand[i]) {
+                        pWin();
+                        printf("\nYou have the high card!");
+                        break;
+                    }
+                    else if (pHand[i] < cHand[i]) {
+                        cWin();
+                        printf("\nComputer has the high card!");
+                        break;
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+int checkHighSuit (int pCard, int cCard) {
+    int returnValue = 0;
+
+}
+
+void pWin() {
+    printf("\nYou win!");
+}
+
+void cWin() {
+    printf("\nYou lose!");
 }
